@@ -3,18 +3,18 @@ title: "Home Assistant Battery Widget"
 description: A guide to creating a battery widget for Home Assistant.
 pubDate: 2023-12-26
 tags:
-  - homeassistant
+  - home-assistant
   - android
   - widget
 original: https://community.home-assistant.io/t/battery-widget/661545
-cover: ../../assets/blog/battery-widget.png
+cover: ../../assets/blog/battery-widget/battery-widget.png
 ---
 
 I have been working on a battery widget for my home screen to replace the Pixel battery widget, the UI is not great because it is rendered as ASCII art but I quite like it.
 
 <!-- ![Demo Image](../../assets/blog/battery-widget.png) -->
 
-It makes use of a [template widget](https://companion.home-assistant.io/docs/integrations/android-widgets#template) so it requires a connection to HomeAssistant even for local devices.
+It makes use of a [template widget](https://companion.home-assistant.io/docs/integrations/android-widgets#template) so it requires a connection to Home-Assistant even for local devices.
 
 ## Version 2
 
