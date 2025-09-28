@@ -3,19 +3,20 @@ title: Programming Humans to Use Cheap Energy
 description: |-
   Exploring how I am training my household to use energy when it is cheapest.
 tags:
-  - homeassistant
+  - home-assistant
+  - predbat
 pubDate: 2025-09-29
 previous: predbat-dashboard
 ---
 
-An important part of optimising energy costs is making sure that humans use energy at the correct times.
+An important part of optimising energy costs is changing human behaviour to change energy consumption.
 
 Here are some simple rules that help to achieve this:
 
 1. Limit energy use when the battery is low, and in the near future, energy will be expensive, with minimal solar generation.
 2. Use lots of energy when the battery is full, or energy is cheap, or there is lots of solar generation (especially minimise exported energy).
 3. Use energy when it is free (e.g. Octopus Free Energy Sessions).
-4. When energy is expensive, and there is little solar generation, do not overload the battery (e.g. do not turn on the kettle and the toaster at the same time).
+4. When energy is expensive, do not overload the inverter (e.g. do not turn on the kettle and the toaster at the same time).
 
 ## Using an App/Dashboard
 
@@ -25,12 +26,14 @@ It is interesting how quickly humans learn from feedback.
 
 I talk about my dashboard cards specifically in my [previous post](/blog/predbat-dashboard).
 
+This method can also be improved using widgets for the watch companion apps ([Apple Watch](https://companion.home-assistant.io/docs/apple-watch) and [Wear OS](https://companion.home-assistant.io/docs/wear-os)) or templates for [GarminHomeAssistant](/projects/garminhomeassistant).
+
 ## Using Notifications
 
 The problem with a dashboard is that people aren't always going to be looking at it. It can improve behaviour if people are notified when an important change should be made. Here is a set of notifications that I have found useful:
 
-1. Large export of energy - you will always (usually) sell energy at a lower price than you buy it, so if you can use more energy instead of exporting it, you will save money.
-2. Battery overload - if energy cannot be drawn from the battery quickly enough, to supply the load (`load - solar > battery max discharge`), then energy will be drawn from the grid, which costs money.
+1. Large export of energy - you will always (usually) sell energy at a lower price than you buy it (on the Agile Octopus and Agile Octopus Outgoing Tariff), so if you can use more energy instead of exporting it, you will save money.
+2. Inverter overload - if energy cannot be converted from DC to AC, to supply the load (`load > inverter capacity`, for my case: `toaster + kettle > 3.8kW`), then energy will be drawn from the grid, which costs money.
 3. Energy is free - if energy is free, then it is a good time to use energy. This is especially good if you can create a calendar event for free electricity sessions, so people can plan ahead.
 
 Here are the corresponding Home-Assistant automations:
@@ -58,25 +61,36 @@ Here are the corresponding Home-Assistant automations:
   mode: single
 
 - alias: Free Electricity Session Notification
-  description: ''
+  description: ""
   triggers:
   - event_type: octopus_energy_new_octoplus_free_electricity_session
     trigger: event
+  - trigger: state
+    entity_id:
+    - >-
+      binary_sensor.octopus_energy_a_4ae68a17_octoplus_free_electricity_session
+    attribute: next_event_start
+    enabled: true
   conditions: []
   actions:
   - action: notify.all_phones
     metadata: {}
     data:
       title: New Free Electricity Session
-      message: Turn on your devices for free power! It starts at {{ trigger.event.data["event_start"].strftime('%H:%M') }} on {{ trigger.event.data["event_start"].strftime('%d/%m') }} for {{ trigger.event.data["event_duration_in_minutes"] | int }} minutes.
+      message: >-
+        Turn on your devices for free power! It starts at {{
+        trigger.to_state.attributes.next_event_start.strftime('%H:%M') }} on {{
+        trigger.to_state.attributes.next_event_start.strftime('%d/%m') }} for {{
+        trigger.to_state.attributes.next_event_duration_in_minutes | int }}
+        minutes.
       data:
         notification_icon: mdi:home-lightning-bolt
         tag: free-electricity
         channel: Energy
   mode: single
 
-- alias: Battery Overload Notification
-  description: Battery maxed out and additional energy drawn from the grid.
+- alias: Inverter Overload Notification
+  description: Inverter maxed out and additional energy drawn from the grid.
   triggers:
   - trigger: numeric_state
     entity_id:
@@ -97,8 +111,8 @@ Here are the corresponding Home-Assistant automations:
   - action: notify.all_phones
     metadata: {}
     data:
-      title: Battery Overload Warning
-      message: Full battery discharge and drawing from the grid, totalling {{ states('sensor.solax_grid_import') | int - states('sensor.solax_battery_power_charge') | int }} W.
+      title: Inverter Overload Warning
+      message: Inverter maxed out and drawing from the grid, totalling {{ states('sensor.solax_grid_import') | int - states('sensor.solax_battery_power_charge') | int }} W.
       data:
         notification_icon: mdi:battery-alert
         tag: battery-overload
@@ -109,22 +123,26 @@ Here are the corresponding Home-Assistant automations:
 Here are Home-Assistant automations to add Octopus Sessions to Google Calendar:
 
 ```yaml
-- alias: "📆 Free Electricity Calendar"
-  description: ''
+- alias: 📆 Free Electricity Calendar
+  description: ""
   triggers:
-  - event_type: octopus_energy_new_octoplus_free_electricity_session
-    trigger: event
+    - trigger: state
+      entity_id:
+        - >-
+          binary_sensor.octopus_energy_a_4ae68a17_octoplus_free_electricity_session
+      attribute: next_event_start
+      enabled: true
   conditions: []
   actions:
-  - action: calendar.create_event
-    data:
-      summary: Free Electricity
-      start_date_time: '{{ trigger.event.data["event_start"] }}'
-      end_date_time: '{{ trigger.event.data["event_end"] }}'
-    target:
-      entity_id: calendar.shared
-  mode: parallel
-  max: 3
+    - action: calendar.create_event
+      data:
+        summary: Free Electricity
+        start_date_time: "{{ trigger.to_state.attributes.next_event_start }}"
+        end_date_time: "{{ trigger.to_state.attributes.next_event_end }}"
+      target:
+        entity_id: calendar.shared
+  mode: single
+
 
 - alias: "📆 Electricity Savings Sessions Calendar"
   description: Creates a calendar event for upcoming Octopus Energy Savings Sessions
@@ -154,9 +172,9 @@ I created my live indicator using ESPHome on an [M5Stack-Atom-Echo](https://docs
 1. Nothing yet (obscured by curtain)
 2. Battery Level (level shown like a progress bar across the wall, current state shown by animated pixel moving across the LEDs with variable speed) and energy rates (green colour for <0.3p/kWh, red colour for >20p/kWh, otherwise yellow colour)
 3. Solar Level (solar generation as a fraction of the capacity shown like a progress bar)
-4. Battery Overload Warning (accompanied by a beep)
+4. Inverter Overload Warning (accompanied by a beep)
 
-This setup has slightly improved our costs. I think that this improvement is a product of improved ergonomics and the feeling of guilt felt when you see the battery discharging quickly or you get beeped by the battery overload warning.
+This setup has slightly improved our costs. I think that this improvement is a product of improved ergonomics and the feeling of guilt felt when you see the battery discharging quickly or you get beeped by the inverter overload warning.
 
 Here is my ESPHome configuration:
 
@@ -470,6 +488,7 @@ Here are the Home-Assistant automations:
 
 ```yaml
 - alias: Energy Light
+  description: ""
   triggers:
   - trigger: state
     entity_id:
@@ -491,15 +510,15 @@ Here are the Home-Assistant automations:
     - predbat.rates
     above: 20
   - trigger: time
-    at: 06:00:00
+    at: "06:00:00"
   - trigger: time
-    at: '22:00:00'
+    at: "22:00:00"
     enabled: false
   - trigger: state
     entity_id:
     - light.energy_light_power_status
     from: unavailable
-    to: 'off'
+    to: "off"
   - trigger: numeric_state
     entity_id:
     - sensor.solax_battery_power_charge
@@ -518,11 +537,11 @@ Here are the Home-Assistant automations:
       conditions:
       - condition: state
         entity_id: binary_sensor.kitchen_motion
-        state: 'off'
+        state: "off"
       - condition: time
-        before: 06:00:00
+        before: "06:00:00"
       - condition: time
-        after: '22:00:00'
+        after: "22:00:00"
         enabled: false
     then:
     - action: light.turn_off
@@ -530,7 +549,7 @@ Here are the Home-Assistant automations:
       data: {}
       target:
         entity_id: light.energy_light_power_status
-    - stop: ''
+    - stop: ""
     alias: Light should be off
   - variables:
       color:
@@ -570,7 +589,7 @@ Here are the Home-Assistant automations:
     - conditions:
       - condition: state
         entity_id: predbat.status
-        state: Discharging
+        state: Exporting
       sequence:
       - variables:
           effect: Battery Level Exporting
@@ -598,13 +617,13 @@ Here are the Home-Assistant automations:
     metadata: {}
     data:
       brightness_pct: 50
-      rgb_color: '{{ color }}'
-      effect: '{{ effect }}'
+      rgb_color: "{{ color }}"
+      effect: "{{ effect }}"
     target:
       entity_id: light.energy_light_power_status
   mode: single
 
-- alias: Battery Discharge Overload
+- alias: Inverter Overload
   description: ''
   triggers:
   - trigger: state

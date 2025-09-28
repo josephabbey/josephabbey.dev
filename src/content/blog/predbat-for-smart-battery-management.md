@@ -3,14 +3,16 @@ title: "Predbat for Smart Battery Management"
 description: |-
   What I'm learning about using Predbat to optimize my home battery system with Home Assistant.
 tags:
-  - homeassistant
+  - home-assistant
+  - predbat
 pubDate: 2025-09-25
 next: predbat-dashboard
+cover: ../../assets/blog/predboard-dashboard/power-prediction.png
 ---
 
 [Predbat](https://springfall2008.github.io/batpred/) is an open-source battery optimiser for your home solar and battery system.
 
-It uses a model to predict your solar generation ([Solcast](https://solcast.com/)), a model to predict Octopus Agile prices (if you use it) and it creates and uses a model to predict your load power (consumption). Combining these three models, it will produce a plan to charge/discharge your battery in the most cost-effective way, it can also manage your car charging.
+It uses a model to [predict your solar generation](#solar-model) ([Solcast](https://solcast.com/)), a model to [predict Octopus Agile prices](#rates-model) (if you use it) and it creates and uses a model to [predict your load power](#load-model) (consumption). Combining these three models, it will produce a plan to charge/discharge your battery in the most cost-effective way, it can also manage your car charging.
 
 ![Power Prediction](../../assets/blog/predboard-dashboard/power-prediction-no-derived.png)
 
@@ -18,7 +20,7 @@ The graph above shows the predicted power from the solar and load models.
 
 ![Power Prediction](../../assets/blog/predboard-dashboard/power-prediction.png)
 
-This graph shows the predicted power on the battery and grid, based on the plan created. Notice when the battery is full because there is lots of grid export.
+This graph shows the predicted power on the battery and grid, based on the plan created. The power predictions are noisy, this seems to be a quirk of the load model which seems to be accurate over time, but has random instantaneous spikes. Notice at roughly 13:00, the battery gets to 100% and the battery power (teal) goes to 0 and the grid power (blue) becomes negative, meaning export.
 
 ## Home Assistant Integration
 
@@ -64,3 +66,7 @@ The battery and grid predictions are based on the solar and load models. It know
 ### Cost Predictions
 
 The cost predictions are based on the rates model and grid predictions. It calculates the cost of energy from the grid and the revenue from exporting energy to the grid. It then adds the standing charge to get the total cost.
+
+## Credit to Predbat Contributors
+
+Predbat is an incredible piece of work, it is a production quality battery management programme. The author Trefor Southwell could make a lot of money from this but provides it for free, for non-commercial use. He is very responsive to his users and has welcomed contributions from 43 other engineers. Thank you to Trefor and all the other contributors, this is a very valued part of my smart home.

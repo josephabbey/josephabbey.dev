@@ -3,11 +3,19 @@ title: My Predbat Dashboard and Graphs
 description: |-
   The cards that I use for my Predbat dashboard in Home Assistant.
 tags:
-  - homeassistant
+  - home-assistant
+  - predbat
 pubDate: 2025-09-26
 previous: predbat-for-smart-battery-management
 next: programming-humans-to-use-cheap-energy
+cover: ../../assets/blog/predboard-dashboard/plan-card.png
 ---
+
+The default Home-Assistant Energy Dashboard is a great starting point, but it is limited by its need to be standard very quickly.
+
+Conversely, Predbat provides out of the box a lot of graph cards that are specialised and complex. For me viewing these on my phone, I was overwhelmed; in a first instance there was a lot of lines on the graphs that I did not understand.
+
+I have attempted to simplify the Predbat graphs and extend the Home-Assistant Energy Dashboard for my own use, but I have documented my work below.
 
 ## Prediction Graphs
 
@@ -17,7 +25,7 @@ All of these graphs make use of the [Apexcharts Card](https://github.com/RomRide
 
 ![Energy Rates Prediction](../../assets/blog/predboard-dashboard/energy-rates-prediction.png)
 
-Above is a demo chart showing predicted energy rates for the 48 hours. Every day at 4pm octopus release the known rates for the next day, so the first 24 hours are known and the next 24 hours are predicted. I have also enabled the extrema markers.
+Above is a demo chart showing predicted energy rates for the 48 hours. Every day at 4pm Octopus release the known rates for the next day, so the first 24 hours are known and the next 24 hours are predicted. I have also enabled the extrema markers.
 
 N.B. We are currently waiting on certification to get paid to export electricity, so our export rates are all 0. If your export rates are not 0, your plan will obviously be very different to ours.
 
@@ -326,9 +334,13 @@ content: |
   <style>
     ha-card {
       overflow-x: scroll;
+      text-wrap-mode: nowrap; 
     }
     table {
       background-color: var(--card-background-color);
+      {% if is_state("switch.predbat_active", "on") %}
+        opacity: 0.5;
+      {% endif %}
     }
     td {
       color: var(--primary-text-color);
@@ -370,12 +382,28 @@ content: |
       color: var(--amber-color);
     }
   </style>
-  {{ state_attr('predbat.plan_html', 'html') }}
+  {{
+    state_attr('predbat.plan_html', 'html')
+    | replace("&#8526;", "<ha-icon icon=\"mdi:hand-back-left\" style=\"--mdc-icon-size: 1em;\" title=\"Manual\"></ha-icon>")
+    | replace("&#9728;", "<ha-icon icon=\"mdi:solar-power\" style=\"--mdc-icon-size: 1em; margin-left: 0.25em\"></ha-icon>")
+    | replace("? &#x2696;", "<ha-icon icon=\"mdi:calculator\" style=\"--mdc-icon-size: 1em;\" title=\"Estimated using rates model\"></ha-icon>")
+    | replace("?", "<ha-icon icon=\"mdi:history\" style=\"--mdc-icon-size: 1em;\" title=\"Rate not yet defined, using previous day rate\"></ha-icon>")
+    | replace("$", "<ha-icon icon=\"mdi:currency-eur-off\" style=\"--mdc-icon-size: 1em;\" title=\"Octopus Free Energy Session\"></ha-icon>")
+  }}
 ```
 
 ## Power Flow Card
 
-The [Power Flow Plus Card](https://github.com/flixlix/power-flow-card-plus) is a custom card for Home Assistant that provides a visual representation of power flow in your home.
+![Power Flow Card](../../assets/blog/predboard-dashboard/power-flow-card.png)
+
+The [Power Flow Plus Card](https://github.com/flixlix/power-flow-card-plus) is a custom card for Home Assistant that provides a visual representation of power flow in your home. The benefit of this over the built in card is that this will show power, not energy; this is instantaneous.
+
+You can see:
+
+- Solar Generation
+- Battery Power
+- Grid Power (and CO₂ Intensity)
+- Load (and individual devices)
 
 ```yaml
 type: custom:power-flow-card-plus
