@@ -6,6 +6,22 @@
   color-scheme: dark;
 }
 
+/* Prevent a white flash during Chrome's view-transition animations.
+   Ensure the root/html background matches the site's dark background
+   and style the view-transition pseudo-elements if supported. */
+html,
+body {
+  background-color: var(--background);
+  min-height: 100%;
+}
+
+@supports (selector(::view-transition-old)) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    background-color: var(--background);
+  }
+}
+
 /*
   The CSS in this style tag is based off of Bear Blog's default CSS.
   https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
