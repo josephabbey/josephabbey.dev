@@ -16,6 +16,10 @@ body {
 }
 
 @supports (selector(::view-transition-old)) {
+  ::view-transition-old {
+    animation: none;
+  }
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
     background-color: var(--background);
