@@ -27,7 +27,7 @@ languages:
   - Python
 ---
 
-![Venu 2](https://raw.githubusercontent.com/house-of-abbey/GarminHomeAssistant/main/images/Actual_Venu2_Theme.jpg)
+![Venu 2]([https://raw.githubusercontent.com/house-of-abbey/GarminHomeAssistant/main/images/Actual_Venu2_Theme.jpg](https://github.com/house-of-abbey/GarminHomeAssistant/blob/main/images/cover_image_500px.png?raw=true))
 
 A Garmin application to provide a "dashboard" to control your devices via [HomeAssistant](https://www.home-assistant.io/). The application will never be as fully fledged as a HomeAssistant dashboard, so it is designed to be good enough for the simple and essential things. Those things that can be activated via an on/off toggle or a tap. That should cover lights, switches, and anything requiring a single press such as an automation. For anything more complicated, e.g. thermostat, it would always be quicker and simpler to reach for your phone or tablet... or the device's own remote control!
 
