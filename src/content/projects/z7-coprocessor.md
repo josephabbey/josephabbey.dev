@@ -228,7 +228,7 @@ static INLINE void Xil_Out32(UINTPTR Addr, u32 Value)
 Here is an example topology of the AXI interconnectivity:
 
 <figure>
-  <img src="images/AXI_MM.svg" alt="Memory Mapped I/O" />
+  <img src="https://raw.githubusercontent.com/josephabbey/z7-coprocessor/c6b628fd32d3525b9472255f21b004d9460a9439/docs/images/AXI_MM.svg" alt="Memory Mapped I/O" />
   <figcaption>AXI MM Interconnectivity</figcaption>
 </figure>
 
